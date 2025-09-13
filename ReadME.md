@@ -39,6 +39,7 @@ y_pred[i] = np.argmax(np.bincount(closest_y))
 ### Calculate Distance 
 
 **L2 Distance** (Euclidean distance) is defined as:
+
 $$
 d_2(\mathbf{x}, \mathbf{y}) = \|\mathbf{x} - \mathbf{y}\|_{2}
 = \sqrt{\sum_{i=1}^n |x_i - y_i|^2}
@@ -48,12 +49,14 @@ dists[i, j] = np.sqrt(np.sum(np.power(x1 - x2, 2)))
 ```
 
 while **L1 Distance** (Manhattan Distance) is defined as:
+
 $$
 d_1(\mathbf{x}, \mathbf{y}) = \|\mathbf{x} - \mathbf{y}\|_{1}
 = \sum_{i=1}^n |x_i - y_i|
 $$
 
 Generally the **LP-Norm Distance** is 
+
 $$
 d_p(\mathbf{x}, \mathbf{y}) 
 = \|\mathbf{x} - \mathbf{y}\|_{p}
@@ -70,9 +73,11 @@ The result
 
 
 Vector 
+
 $$
 d(\mathbf{x}_i, \mathbf{x}_j^{\text{train}})^2 = \|\mathbf{x}_i\|^2 + \|\mathbf{x}_j^{\text{train}}\|^2 - 2 \mathbf{x}_i \cdot \mathbf{x}_j^{\text{train}}
 $$
+
 ```Python
 dists = np.sqrt(
 	-2 * (X @ self.X_train.T)
@@ -101,31 +106,38 @@ No loop version took 1.028926 seconds
 We have: data point $\mathbf{x}_i \in \mathbb{R}^{1 \times D}$, weights $W \in \mathbb{R}^{D \times C}$, logits  $\mathbf{s}_i = \mathbf{x}_i W \in \mathbb{R}^{1 \times C}$
 
 - Predicted probabilities (softmax):  
+  
 $$
 \hat{p}_{i,j} = \frac{e^{s_{i,j}}}{\sum_{k=1}^C e^{s_{i,k}}}, \quad j=1,\dots,C
 $$
 - One-hot label:  
+
 $$
 y_i \in \mathbb{R}^{1 \times C}, \quad y_{i,k} = 1 \text{ for the true class } k
 $$
 
 The **cross entropy loss** $\mathcal{L}$ is defined as 
+
 $$
 \mathcal{L}_i = -\sum_{j=1}^C y_{i,j} \log \hat{p}_{i,j}
 = -\log \hat{p}_{i,k}
 $$
 
 To calculate the gradient of $W$ w.r.t. $\mathrm{x}_{i}$, we can implement the **chain rule**
+
 $$
 \frac{\partial \mathcal{L}_i}{\partial W}
 = \frac{\partial \mathcal{L}_i}{\partial \hat{p}_i} \cdot
 \frac{\partial \hat{p}_i}{\partial \mathbf{s}_i} \cdot
 \frac{\partial \mathbf{s}_i}{\partial W}
 $$
+
 For each components:
+
 $$
 \frac{\partial \mathcal{L}_i}{\partial \hat{p}_{i,j}} = -\frac{y_{i,j}}{\hat{p}_{i,j}}
 $$
+
 Softmax Jacobian:  
 
 $$
@@ -142,6 +154,7 @@ $$
 $$
 
 So the gradient w.r.t. logits($s_{i}$) is simply:  
+
 $$
 \frac{\partial \mathcal{L}_i}{\partial s_{i,j}}
 = \sum_{m=1}^C \frac{\partial \mathcal{L}_i}{\partial \hat{p}_{i,m}} 
@@ -152,17 +165,20 @@ $$
 $$
 
 For the linear function: 
+
 $$
 \frac{\partial s_{i,j}}{\partial W_{d,j}} = x_{i,d}
 $$
 
 Put all together, we have:  
+
 $$
 \nabla_W \mathcal{L}_i = \mathbf{x}_i^\top (\hat{p}_i - y_i)
 $$
 
 In sum: 
 - For a single data point $\mathbf{x}_i$, the **outer product** between $\mathrm{x}_{i}$ and $(\hat{p}_i - y_i)$
+
 $$
 \nabla_W \mathcal{L}_i = \mathbf{x}_i^\top \, (\hat{p}_i - y_i)
 $$
@@ -200,6 +216,7 @@ Backward
 $$
 \frac{\partial L}{\partial x} = d\text{out} \, W^\top
 $$
+
 Remember to reshape the $x$ back to the original shape 
 
 $$
