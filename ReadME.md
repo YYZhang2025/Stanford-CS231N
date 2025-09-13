@@ -1,3 +1,15 @@
+<h1 align="center">My SOLUTION to <br/>
+CS231N: Convolutional Neural Networks for Visual Recognition <br/>
+(Spring 2025 Version)</h1>
+
+
+This is my solution to the Stanford CS231N course (Spring 2025 version). The original assignment can be found [here](https://cs231n.stanford.edu/). This course has updated the newest video lectures in the Youtube [here](https://www.youtube.com/playlist?list=PLoROMvodv4rOmsNzYBMe0gJY2XS8AQg16).  
+This is course is more focused on the fundamentals of deep learning and computer vision. The assignments are implemented in Python and use NumPy for different components in the deep learning models. Mastering these fundamentals will help you to understand the more advanced models and architectures in deep learning. There are 3 assignments in total:
+- Assignment 1: Basic Operations and Image Classification
+- Assignment 2: Convolutional Neural Networks and PyTorch
+- Assignment 3: Transformers, CLIP, DINO, and Diffusion Models
+
+
 # Assignment 01
 
 Change the folder name
