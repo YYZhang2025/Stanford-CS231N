@@ -1,10 +1,10 @@
-from builtins import range
-from builtins import object
 import os
+from builtins import object, range
+
 import numpy as np
 
-from ..layers import *
 from ..layer_utils import *
+from ..layers import *
 
 
 class TwoLayerNet(object):
@@ -55,10 +55,10 @@ class TwoLayerNet(object):
         # weights and biases using the keys 'W2' and 'b2'.                         #
         ############################################################################
         self.params = {
-          'W1': np.random.randn(input_dim, hidden_dim) * weight_scale,
-          'b1': np.zeros(hidden_dim),
-          'W2': np.random.randn(hidden_dim, num_classes) * weight_scale,
-          'b2': np.zeros(num_classes)
+            "W1": np.random.randn(input_dim, hidden_dim) * weight_scale,
+            "b1": np.zeros(hidden_dim),
+            "W2": np.random.randn(hidden_dim, num_classes) * weight_scale,
+            "b2": np.zeros(num_classes),
         }
 
         ############################################################################
@@ -95,7 +95,6 @@ class TwoLayerNet(object):
         out2, cache2 = relu_forward(out1)
         scores, cache3 = affine_forward(out2, W2, b2)
 
-
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -125,9 +124,7 @@ class TwoLayerNet(object):
         dW1 += self.reg * W1
         dW2 += self.reg * W2
 
-        grads = {'W1': dW1, 'b1': db1, 'W2': dW2, 'b2': db2}
-
-        
+        grads = {"W1": dW1, "b1": db1, "W2": dW2, "b2": db2}
 
         ############################################################################
         #                             END OF YOUR CODE                             #
@@ -136,24 +133,23 @@ class TwoLayerNet(object):
         return loss, grads
 
     def save(self, fname):
-      """Save model parameters."""
-      fpath = os.path.join(os.path.dirname(__file__), "../saved/", fname)
-      params = self.params
-      np.save(fpath, params)
-      print(fname, "saved.")
-    
-    def load(self, fname):
-      """Load model parameters."""
-      fpath = os.path.join(os.path.dirname(__file__), "../saved/", fname)
-      if not os.path.exists(fpath):
-        print(fname, "not available.")
-        return False
-      else:
-        params = np.load(fpath, allow_pickle=True).item()
-        self.params = params
-        print(fname, "loaded.")
-        return True
+        """Save model parameters."""
+        fpath = os.path.join(os.path.dirname(__file__), "../saved/", fname)
+        params = self.params
+        np.save(fpath, params)
+        print(fname, "saved.")
 
+    def load(self, fname):
+        """Load model parameters."""
+        fpath = os.path.join(os.path.dirname(__file__), "../saved/", fname)
+        if not os.path.exists(fpath):
+            print(fname, "not available.")
+            return False
+        else:
+            params = np.load(fpath, allow_pickle=True).item()
+            self.params = params
+            print(fname, "loaded.")
+            return True
 
 
 class FullyConnectedNet(object):
@@ -225,16 +221,16 @@ class FullyConnectedNet(object):
         dims = [input_dim] + hidden_dims + [num_classes]
         rng = np.random.RandomState(seed)
         for i in range(1, self.num_layers + 1):
-            Wi = f'W{i}'; bi = f'b{i}'
-            self.params[Wi] = weight_scale * rng.randn(dims[i-1], dims[i])
+            Wi = f"W{i}"
+            bi = f"b{i}"
+            self.params[Wi] = weight_scale * rng.randn(dims[i - 1], dims[i])
             self.params[bi] = np.zeros(dims[i])
             self.params[Wi] = self.params[Wi].astype(dtype)
             self.params[bi] = self.params[bi].astype(dtype)
 
             if self.normalization is not None and i < self.num_layers:
-                self.params[f"gamma{i+1}"] = np.ones(dim_arr[i])
-                self.params[f"beta{i+1}"] = np.zeros(dim_arr[i])
-
+                self.params[f"gamma{i}"] = np.ones(dims[i])
+                self.params[f"beta{i}"] = np.zeros(dims[i])
 
         ############################################################################
         #                             END OF YOUR CODE                             #
@@ -266,7 +262,7 @@ class FullyConnectedNet(object):
 
     def loss(self, X, y=None):
         """Compute loss and gradient for the fully connected net.
-        
+
         Inputs:
         - X: Array of input data of shape (N, d_1, ..., d_k)
         - y: Array of labels, of shape (N,). y[i] gives the label for X[i].
@@ -305,7 +301,7 @@ class FullyConnectedNet(object):
         # self.bn_params[1] to the forward pass for the second batch normalization #
         # layer, etc.                                                              #
         ############################################################################
-        caches = []            # per hidden layer: (fc_cache, norm_cache, relu_cache, do_cache)
+        caches = []  # per hidden layer: (fc_cache, norm_cache, relu_cache, do_cache)
         out = X
         for i in range(1, self.num_layers):
             Wi, bi = self.params[f"W{i}"], self.params[f"b{i}"]
@@ -390,11 +386,11 @@ class FullyConnectedNet(object):
             if self.normalization == "batchnorm":
                 dout, dgamma, dbeta = batchnorm_backward_alt(dout, norm_cache)
                 grads[f"gamma{i}"] = dgamma
-                grads[f"beta{i}"]  = dbeta
+                grads[f"beta{i}"] = dbeta
             elif self.normalization == "layernorm":
                 dout, dgamma, dbeta = layernorm_backward(dout, norm_cache)
                 grads[f"gamma{i}"] = dgamma
-                grads[f"beta{i}"]  = dbeta
+                grads[f"beta{i}"] = dbeta
 
             # affine backward
             dx, dW, db = affine_backward(dout, fc_cache)
@@ -410,22 +406,21 @@ class FullyConnectedNet(object):
 
         return loss, grads
 
-
     def save(self, fname):
-      """Save model parameters."""
-      fpath = os.path.join(os.path.dirname(__file__), "../saved/", fname)
-      params = self.params
-      np.save(fpath, params)
-      print(fname, "saved.")
-    
+        """Save model parameters."""
+        fpath = os.path.join(os.path.dirname(__file__), "../saved/", fname)
+        params = self.params
+        np.save(fpath, params)
+        print(fname, "saved.")
+
     def load(self, fname):
-      """Load model parameters."""
-      fpath = os.path.join(os.path.dirname(__file__), "../saved/", fname)
-      if not os.path.exists(fpath):
-        print(fname, "not available.")
-        return False
-      else:
-        params = np.load(fpath, allow_pickle=True).item()
-        self.params = params
-        print(fname, "loaded.")
-        return True
+        """Load model parameters."""
+        fpath = os.path.join(os.path.dirname(__file__), "../saved/", fname)
+        if not os.path.exists(fpath):
+            print(fname, "not available.")
+            return False
+        else:
+            params = np.load(fpath, allow_pickle=True).item()
+            self.params = params
+            print(fname, "loaded.")
+            return True
