@@ -27,6 +27,7 @@ def affine_forward(x, w, b):
     # TODO: Implement the affine forward pass. Store the result in out. You   #
     # will need to reshape the input into rows.                               #
     ###########################################################################
+    out = x.reshape(x.shape[0], -1) @ w + b
 
     ###########################################################################
     #                             END OF YOUR CODE                            #
@@ -56,6 +57,9 @@ def affine_backward(dout, cache):
     ###########################################################################
     # TODO: Implement the affine backward pass.                               #
     ###########################################################################
+    dx = (dout @ w.T).reshape(x.shape[0], *x.shape[1:])
+    dw =  x.reshape(x.shape[0], -1).T @ dout
+    db = dout.sum(axis=0)
 
     ###########################################################################
     #                             END OF YOUR CODE                            #
@@ -78,6 +82,7 @@ def relu_forward(x):
     ###########################################################################
     # TODO: Implement the ReLU forward pass.                                  #
     ###########################################################################
+    out = np.maximum(0, x)
 
     ###########################################################################
     #                             END OF YOUR CODE                            #
@@ -101,6 +106,7 @@ def relu_backward(dout, cache):
     ###########################################################################
     # TODO: Implement the ReLU backward pass.                                 #
     ###########################################################################
+    dx = dout * (x > 0)
 
     ###########################################################################
     #                             END OF YOUR CODE                            #
@@ -688,6 +694,12 @@ def svm_loss(x, y):
     ###########################################################################
     # TODO: Copy over your solution from A1.
     ###########################################################################
+    N = len(y)                                # number of samples
+    x_true = x[range(N), y][:, None]          # scores for true labels
+    margins = np.maximum(0, x - x_true + 1)   # margin for each score
+    loss = margins.sum() / N - 1
+    dx = (margins > 0).astype(float) / N
+    dx[range(N), y] -= dx.sum(axis=1)
 
     ###########################################################################
     #                             END OF YOUR CODE                            #
@@ -714,6 +726,15 @@ def softmax_loss(x, y):
     ###########################################################################
     # TODO: Copy over your solution from A1.
     ###########################################################################
+    N = len(y) # number of samples
+
+    P = np.exp(x - x.max(axis=1, keepdims=True)) # numerically stable exponents
+    P /= P.sum(axis=1, keepdims=True)            # row-wise probabilities (softmax)
+
+    loss = -np.log(P[range(N), y]).sum() / N # sum cross entropies as loss
+
+    P[range(N), y] -= 1
+    dx = P / N
 
     ###########################################################################
     #                             END OF YOUR CODE                            #

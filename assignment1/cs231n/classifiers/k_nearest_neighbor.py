@@ -49,6 +49,7 @@ class KNearestNeighbor(object):
             raise ValueError("Invalid value %d for num_loops" % num_loops)
 
         return self.predict_labels(dists, k=k)
+    
 
     def compute_distances_two_loops(self, X):
         """
@@ -64,6 +65,7 @@ class KNearestNeighbor(object):
           is the Euclidean distance between the ith test point and the jth training
           point.
         """
+        
         num_test = X.shape[0]
         num_train = self.X_train.shape[0]
         dists = np.zeros((num_test, num_train))
@@ -75,7 +77,11 @@ class KNearestNeighbor(object):
                 # training point, and store the result in dists[i, j]. You should   #
                 # not use a loop over dimension, nor use np.linalg.norm().          #
                 #####################################################################
-                pass
+                # pass
+                x1 = self.X_train[j]
+                x2 = X[i]
+                dists[i, j] = np.sqrt(np.sum(np.power(x1 - x2, 2)))
+
         return dists
 
     def compute_distances_one_loop(self, X):
@@ -95,7 +101,10 @@ class KNearestNeighbor(object):
             # points, and store the result in dists[i, :].                        #
             # Do not use np.linalg.norm().                                        #
             #######################################################################
-            pass
+            # pass
+            diff = self.X_train - X[i] 
+            dists[i, :] = np.sqrt(np.sum(diff * diff, axis=1))
+        
         return dists
 
     def compute_distances_no_loops(self, X):
@@ -121,6 +130,11 @@ class KNearestNeighbor(object):
         # HINT: Try to formulate the l2 distance using matrix multiplication    #
         #       and two broadcast sums.                                         #
         #########################################################################
+        dists = np.sqrt(
+            -2 * (X @ self.X_train.T)
+            + np.power(X, 2).sum(axis=1, keepdims=True)
+            + np.power(self.X_train, 2).sum(axis=1, keepdims=True).T
+        ) 
 
         return dists
 
@@ -150,6 +164,13 @@ class KNearestNeighbor(object):
             # neighbors. Store these labels in closest_y.                           #
             # Hint: Look up the function numpy.argsort.                             #
             #########################################################################
+            dist_to_x_test_i = dists[i]
+            # 1
+            sort_index = np.argsort(dist_to_x_test_i)
+            # 2
+            top_k_index = sort_index[:k]
+            closest_y = self.y_train[top_k_index]
+
 
 
             #########################################################################
@@ -159,6 +180,7 @@ class KNearestNeighbor(object):
             # Store this label in y_pred[i]. Break ties by choosing the smaller     #
             # label.                                                                #
             #########################################################################
-
+            # 3 / 4 
+            y_pred[i] = np.argmax(np.bincount(closest_y))
 
         return y_pred
