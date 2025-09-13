@@ -160,7 +160,6 @@ $$
 = \sum_{m=1}^C \frac{\partial \mathcal{L}_i}{\partial \hat{p}_{i,m}} 
 \frac{\partial \hat{p}_{i,m}}{\partial s_{i,j}}
 = \hat{p}_{i,j} - y_{i,j}
-
 \implies \nabla_{s_i}\mathcal{L}_i = \hat{p}_i - y_i
 $$
 
