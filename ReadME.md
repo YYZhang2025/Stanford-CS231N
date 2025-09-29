@@ -350,6 +350,8 @@ Five-layer Net to overfit 50 training examples
 
 
 Batch Normalization is defined as:
+
+
 $$
 \begin{split}
 y_i & = \gamma \cdot \frac{x_i - \mu_B}{\sqrt{\sigma_B^2 + \epsilon}} + \beta \\
@@ -358,8 +360,9 @@ y_i & = \gamma \cdot \frac{x_i - \mu_B}{\sqrt{\sigma_B^2 + \epsilon}} + \beta \\
 \end{split}
 $$
 
-
 We also need store the `running_mean` and `running_var` to use the batch normalization during the testing stage:
+
+
 $$
 \begin{split}
 \text{running\_mean}  &\leftarrow  (1 - \text{momentum}) \cdot \text{running\_mean}  + \text{momentum} \cdot \mu_B \\
@@ -367,8 +370,9 @@ $$
 \end{split}
 $$
 
-
 Backward pass of batch normalization
+
+
 $$
 \begin{split}
 \frac{\partial L}{\partial \beta} &= \sum_{i=1}^N \mathrm{dout}_i \\[6pt]
@@ -389,8 +393,8 @@ $$
 $$
 
 
-The alternative of the backward pass of the batch normalization:
 
+The alternative of the backward pass of the batch normalization:
 
 $$
 \begin{split}
@@ -570,7 +574,8 @@ After we implemented the transformer, we just need implement the patch embedding
 
 
 
-The loss function for 
+The loss function for SimCLR is the NT-Xent loss (Normalized Temperature-scaled Cross Entropy Loss):
+
 $$
 l \; (i, j) = -\log \frac{\exp (\;\text{sim}(z_i, z_j)\; / \;\tau) }{\sum_{k=1}^{2N} \mathbb{1}_{k \neq i} \exp (\;\text{sim} (z_i, z_k) \;/ \;\tau) }
 $$
