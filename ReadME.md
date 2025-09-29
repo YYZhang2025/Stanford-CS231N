@@ -44,6 +44,8 @@ This is course is more focused on the fundamentals of deep learning and computer
 	- [Q2: Self-Supervised Learning for Image Classification](#q2-self-supervised-learning-for-image-classification)
 	- [Q3: Denoising Diffusion Probabilistic Models](#q3-denoising-diffusion-probabilistic-models)
 	- [Q4: CLIP and DINO](#q4-clip-and-dino)
+		- [CLIP](#clip)
+		- [DINO](#dino)
 
 
 
@@ -557,6 +559,11 @@ The Example of the RNN-Image-Caption
 
 ### Vision Transformer 
 
+After we implemented the transformer, we just need implement the patch embedding, and use the encoder part of the transformer. 
+
+
+>[!note] External Reference
+> For those who want to learn more about Vision Transformer and Transformer, you can check my blog post [here](https://github.com/YYZhang2025/100-AI-Codes) where I explained the transformer and vision transformer in detail.
 
 
 ## Q2: Self-Supervised Learning for Image Classification
