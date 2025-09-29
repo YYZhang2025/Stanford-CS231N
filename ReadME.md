@@ -355,7 +355,8 @@ Batch Normalization is defined as:
 $$
 \begin{split}
 y_i & = \gamma \cdot \frac{x_i - \mu_B}{\sqrt{\sigma_B^2 + \epsilon}} + \beta \\
-\quad \text{where }\sigma_B^2 &= \frac{1}{m} \sum_{i=1}^m (x_i - \mu_B)^2 \\ 
+\quad \text{where } \\ 
+\sigma_B^2 &= \frac{1}{m} \sum_{i=1}^m (x_i - \mu_B)^2 \\ 
 \mu_B &= \frac{1}{m} \sum_{i=1}^m x_i
 \end{split}
 $$
@@ -375,16 +376,16 @@ Backward pass of batch normalization
 
 $$
 \begin{split}
-\frac{\partial L}{\partial \beta} &= \sum_{i=1}^N \mathrm{dout}_i \\[6pt]
-\frac{\partial L}{\partial \gamma} &= \sum_{i=1}^N \mathrm{dout}_i \, \hat{x}_i \\[6pt]
-\mathrm{d}\hat{x}_i &= \mathrm{dout}_i \, \gamma \\[6pt]
+\frac{\partial L}{\partial \beta} &= \sum_{i=1}^N \mathrm{dout}_i \\
+\frac{\partial L}{\partial \gamma} &= \sum_{i=1}^N \mathrm{dout}_i \, \hat{x}_i \\
+\mathrm{d}\hat{x}_i &= \mathrm{dout}_i \, \gamma \\
 \frac{\partial L}{\partial \mathrm{var}} 
 &= \sum_{i=1}^N \mathrm{d}\hat{x}_i \,(x_i - \mu)\,
-\Big(-\tfrac{1}{2}\Big)(\mathrm{var} + \epsilon)^{-\tfrac{3}{2}} \\[6pt]
+\Big(-\tfrac{1}{2}\Big)(\mathrm{var} + \epsilon)^{-\tfrac{3}{2}} \\
 \frac{\partial L}{\partial \mu} 
 &= \sum_{i=1}^N \mathrm{d}\hat{x}_i \, \Big(-(\mathrm{var}+\epsilon)^{-\tfrac{1}{2}}\Big) \\
 &\quad + \frac{\partial L}{\partial \mathrm{var}} \cdot 
-\sum_{i=1}^N \Big(-\tfrac{2}{N}(x_i - \mu)\Big) \\[6pt]
+\sum_{i=1}^N \Big(-\tfrac{2}{N}(x_i - \mu)\Big) \\
 \frac{\partial L}{\partial x_i} 
 &= \mathrm{d}\hat{x}_i \cdot (\mathrm{var}+\epsilon)^{-\tfrac{1}{2}} \\
 &\quad + \frac{\partial L}{\partial \mathrm{var}} \cdot \frac{2}{N}(x_i - \mu) \\
@@ -423,11 +424,9 @@ $$
 \mu_i &= \frac{1}{D}\sum_{j=1}^{D} x_{ij} \\
 \sigma_i^2 &= \frac{1}{D}\sum_{j=1}^{D} \big(x_{ij}-\mu_i\big)^2 \\
 \hat{x}{ij} &= \frac{x{ij}-\mu_i}{\sqrt{\sigma_i^2+\epsilon}}\\
-y_{ij} &= \gamma_j,\hat{x}_{ij} + \beta_j 
+y_{ij} &= \gamma_j,\hat{x}_{ij} + \beta_j  \\
 \end{split}
 $$
-
-
 
 
 
