@@ -5,9 +5,46 @@ CS231N: Convolutional Neural Networks for Visual Recognition <br/>
 
 This is my solution to the Stanford CS231N course (Spring 2025 version). The original assignment can be found [here](https://cs231n.stanford.edu/). This course has updated the newest video lectures in the Youtube [here](https://www.youtube.com/playlist?list=PLoROMvodv4rOmsNzYBMe0gJY2XS8AQg16).  
 This is course is more focused on the fundamentals of deep learning and computer vision. The assignments are implemented in Python and use NumPy for different components in the deep learning models. Mastering these fundamentals will help you to understand the more advanced models and architectures in deep learning. There are 3 assignments in total:
+
 - Assignment 1: Basic Operations and Image Classification
 - Assignment 2: Convolutional Neural Networks and PyTorch
 - Assignment 3: Transformers, CLIP, DINO, and Diffusion Models
+
+**Table of Contents**
+- [Assignment 01](#assignment-01)
+	- [Q1: K-Nearest Neighbor classifier](#q1-k-nearest-neighbor-classifier)
+		- [K-NN Algorithm](#k-nn-algorithm)
+		- [Calculate Distance](#calculate-distance)
+		- [Compares](#compares)
+		- [Experiement \& Cross Validation](#experiement--cross-validation)
+	- [Q2: Implement a Softmax classifier](#q2-implement-a-softmax-classifier)
+		- [Setup](#setup)
+	- [Q3: Two-Layer Neural Network](#q3-two-layer-neural-network)
+		- [Affine Layer](#affine-layer)
+		- [ReLU](#relu)
+		- [Experiement](#experiement)
+		- [Cross Validation](#cross-validation)
+	- [Q4: Higher Level Representations: Image Features](#q4-higher-level-representations-image-features)
+	- [Q5: Training a fully connected network](#q5-training-a-fully-connected-network)
+		- [SGD vs. SGD Momentum](#sgd-vs-sgd-momentum)
+		- [RMSProp and Adam](#rmsprop-and-adam)
+		- [Best Model](#best-model)
+- [Assignment 02](#assignment-02)
+	- [Q1: Batch Normalization](#q1-batch-normalization)
+		- [Batch Normalization](#batch-normalization)
+		- [Batch Normalization for Deep Networks](#batch-normalization-for-deep-networks)
+		- [Layer Normalization](#layer-normalization)
+	- [Q2: Dropout](#q2-dropout)
+	- [Q3: Convolutional Neural Networks](#q3-convolutional-neural-networks)
+	- [Q4: PyTorch on CIFAR-10](#q4-pytorch-on-cifar-10)
+	- [Q5: Image Captioning with Vanilla RNNs](#q5-image-captioning-with-vanilla-rnns)
+- [Assignment 03](#assignment-03)
+	- [Q1: Image Captioning with Transformers](#q1-image-captioning-with-transformers)
+		- [Vision Transformer](#vision-transformer)
+	- [Q2: Self-Supervised Learning for Image Classification](#q2-self-supervised-learning-for-image-classification)
+	- [Q3: Denoising Diffusion Probabilistic Models](#q3-denoising-diffusion-probabilistic-models)
+	- [Q4: CLIP and DINO](#q4-clip-and-dino)
+
 
 
 # Assignment 01
@@ -198,7 +235,7 @@ $$
 
 $$
 \nabla_W \mathcal{L} = X^\top (\hat{P} - Y)
-$$  
+$$
 
 The Loss Curve:
 ![](assets/softmax-classifier-loss-curve.png)
@@ -210,7 +247,7 @@ Cross-validation
 
 
 ![](assets/soft-max-cross-validation.png)
-  
+
 
 ## Q3: Two-Layer Neural Network
 
@@ -304,15 +341,202 @@ Five-layer Net to overfit 50 training examples
 
 ## Q1: Batch Normalization
 
+
+
+### Batch Normalization
+
+
+
+Batch Normalization is defined as:
+$$
+\begin{split}
+y_i & = \gamma \cdot \frac{x_i - \mu_B}{\sqrt{\sigma_B^2 + \epsilon}} + \beta \\
+\quad \text{where }\sigma_B^2 &= \frac{1}{m} \sum_{i=1}^m (x_i - \mu_B)^2 \\ 
+\mu_B &= \frac{1}{m} \sum_{i=1}^m x_i
+\end{split}
+$$
+
+
+We also need store the `running_mean` and `running_var` to use the batch normalization during the testing stage:
+$$
+\begin{split}
+\text{running\_mean}  &\leftarrow  (1 - \text{momentum}) \cdot \text{running\_mean}  + \text{momentum} \cdot \mu_B \\
+\text{running\_var}  &\leftarrow  (1 - \text{momentum}) \cdot \text{running\_var} + \text{momentum} \cdot \sigma_B^2
+\end{split}
+$$
+
+
+Backward pass of batch normalization
+$$
+\begin{split}
+\frac{\partial L}{\partial \beta} &= \sum_{i=1}^N \mathrm{dout}_i \\[6pt]
+\frac{\partial L}{\partial \gamma} &= \sum_{i=1}^N \mathrm{dout}_i \, \hat{x}_i \\[6pt]
+\mathrm{d}\hat{x}_i &= \mathrm{dout}_i \, \gamma \\[6pt]
+\frac{\partial L}{\partial \mathrm{var}} 
+&= \sum_{i=1}^N \mathrm{d}\hat{x}_i \,(x_i - \mu)\,
+\Big(-\tfrac{1}{2}\Big)(\mathrm{var} + \epsilon)^{-\tfrac{3}{2}} \\[6pt]
+\frac{\partial L}{\partial \mu} 
+&= \sum_{i=1}^N \mathrm{d}\hat{x}_i \, \Big(-(\mathrm{var}+\epsilon)^{-\tfrac{1}{2}}\Big) \\
+&\quad + \frac{\partial L}{\partial \mathrm{var}} \cdot 
+\sum_{i=1}^N \Big(-\tfrac{2}{N}(x_i - \mu)\Big) \\[6pt]
+\frac{\partial L}{\partial x_i} 
+&= \mathrm{d}\hat{x}_i \cdot (\mathrm{var}+\epsilon)^{-\tfrac{1}{2}} \\
+&\quad + \frac{\partial L}{\partial \mathrm{var}} \cdot \frac{2}{N}(x_i - \mu) \\
+&\quad + \frac{1}{N}\frac{\partial L}{\partial \mu}
+\end{split}
+$$
+
+
+The alternative of the backward pass of the batch normalization:
+
+
+$$
+\begin{split}
+\mathbf{dbeta} &= \sum_{i=1}^{N} \mathbf{dout}_i \\
+\mathbf{dgamma} &= \sum_{i=1}^{N} \big(\mathbf{dout}_i \odot \hat{\mathbf{x}}i\big) \\
+\mathbf{dx} &= \frac{\gamma}{\sqrt{\mathrm{var}+\epsilon}}\Bigg[
+\mathbf{dout}
+- \frac{1}{N}\sum{i=1}^{N}\mathbf{dout}_i
+- \hat{\mathbf{x}} \frac{1}{N}\sum{i=1}^{N}\big(\mathbf{dout}_i \odot \hat{\mathbf{x}}_i\big)
+\Bigg]
+\end{split}
+$$
+
+
+### Batch Normalization for Deep Networks
+
+
+
+![ass02-batch-norm](./assets/ass02-batch-norm.png)
+
+### Layer Normalization
+
+
+$$
+\begin{split}
+\mu_i &= \frac{1}{D}\sum_{j=1}^{D} x_{ij} \\
+\sigma_i^2 &= \frac{1}{D}\sum_{j=1}^{D} \big(x_{ij}-\mu_i\big)^2 \\
+\hat{x}{ij} &= \frac{x{ij}-\mu_i}{\sqrt{\sigma_i^2+\epsilon}}\\
+y_{ij} &= \gamma_j,\hat{x}_{ij} + \beta_j 
+\end{split}
+$$
+
+
+
+
+
+
 ## Q2: Dropout
+Dropout 
+
+
+
+
+
 
 ## Q3: Convolutional Neural Networks
 
+
+$$
+\begin{aligned}
+&\textbf{Inputs:}\\
+&x \in \mathbb{R}^{N \times C \times H \times W}, \quad 
+w \in \mathbb{R}^{F \times C \times HH \times WW}, \quad 
+b \in \mathbb{R}^{F}, \quad \\
+\text{stride} &= s,\ \ \text{pad} = p, \quad 
+\\
+&\textbf{After zero padding:} \\
+x_{\text{pad}} &\in \mathbb{R}^{N \times C \times (H+2p) \times (W+2p)} \\
+
+&\textbf{Output spatial dimensions:} \\
+H’ &= 1 + \frac{H + 2p - HH}{s} \\
+W’ &= 1 + \frac{W + 2p - WW}{s}
+\\
+&\textbf{Forward convolution:} \\
+\text{for } n &= 1,\dots,N \\
+\text{for } f &= 1,\dots,F \\
+\text{for } i &= 0,\dots,H’-1 \\
+\text{for } j &= 0,\dots,W’-1 \\
+&\quad \text{define the receptive field:} \\
+&\quad R_{n,i,j} = x_{\text{pad}}[n, :,\ i\cdot s : i\cdot s + HH,\ j\cdot s : j\cdot s + WW] \\
+&\quad \text{then compute:}\\
+&\quad out[n,f,i,j] = \sum_{c=1}^{C}\sum_{u=1}^{HH}\sum_{v=1}^{WW}
+R_{n,i,j}[c,u,v] \cdot w[f,c,u,v] + b[f]
+\end{aligned}
+$$
+
+
+
+Small Dataset overftiing 
+
+
+
+![ass02-cnn-samll-data](./assets/ass02-cnn-samll-data.png)
+
+```Shell
+Small data training accuracy: 0.81
+Small data validation accuracy: 0.248
+```
+
+
+
+
+
+
+
+```Shell
+Full data training accuracy: 0.46477551020408164
+Full data validation accuracy: 0.485
+```
+
+
+
 ## Q4: PyTorch on CIFAR-10
+
+In this part, we will learn what is the PyTorch, finially, we can free out hands, and skip the boring Graidnet Calculation part!!
+
+
+
+
+
+![ResNet](./assets/ResNet.png)
+
+
+
+![Efficient Net](./assets/EfficientNet.png)
+
+
+
+
+
+| Model Name      | Valid Accuracy % | Test Accuracy % |
+| --------------- | ---------------- | --------------- |
+| ResNet50        | 80.30            | 80.60           |
+| Efficientnet_b0 | 80.00            | 79.42           |
+
+
+
+
 
 ## Q5: Image Captioning with Vanilla RNNs
 
+Sampled Image
 
+![ass02-vislize-coco](./assets/ass02-vislize-coco.png)
+
+
+
+The Loss Curve of training RNN Image Caption
+
+![ass02-rnn-loss](./assets/ass02-rnn-loss.png)
+
+```Shell
+Final loss:  0.013376469
+```
+
+The Example of the RNN-Image-Caption
+
+![ass02-rnn-image-caption-trained](./assets/ass02-rnn-image-caption-trained.png)
 
 
 
@@ -321,8 +545,151 @@ Five-layer Net to overfit 50 training examples
 
 ## Q1: Image Captioning with Transformers
 
+![ass03-transformer-loss](./assets/ass03-transformer-loss.png)
+
+
+
+
+
+![ass03-transformer](./assets/ass03-transformer.png)
+
+
+
+### Vision Transformer 
+
+
+
 ## Q2: Self-Supervised Learning for Image Classification
+
+
+
+The loss function for 
+$$
+l \; (i, j) = -\log \frac{\exp (\;\text{sim}(z_i, z_j)\; / \;\tau) }{\sum_{k=1}^{2N} \mathbb{1}_{k \neq i} \exp (\;\text{sim} (z_i, z_k) \;/ \;\tau) }
+$$
+
+
+```Shell
+# M
+
+odel Params: 24.62M FLOPs: 1.31G
+Train Epoch: [1/1] Loss: 3.2580: 100%|██████████| 390/390 [02:30<00:00,  2.59it/s]
+Feature extracting: 100%|██████████| 782/782 [00:45<00:00, 17.03it/s]
+Test Epoch: [1/1] Acc@1:83.62% Acc@5:99.36%: 100%|██████████| 157/157 [00:11<00:00, 14.00it/s]
+```
+
+
+
+
+
+Without SimCLR
+
+```Shell
+Train Epoch: [10/10] Loss: 2.4030 ACC@1: 12.96% ACC@5: 57.64%: 100%|██████████| 40/40 [00:08<00:00,  4.98it/s]
+Test Epoch: [10/10] Loss: 2.4337 ACC@1: 15.30% ACC@5: 58.28%: 100%|██████████| 79/79 [00:11<00:00,  6.99it/s]
+
+Best top-1 accuracy without self-supervised learning:  15.299999999999999
+```
+
+
+
+
+
+With Self-Supervised Learning 
+
+```Shell
+Train Epoch: [10/10] Loss: 0.6428 ACC@1: 79.24% ACC@5: 98.08%: 100%|██████████| 40/40 [00:08<00:00,  4.93it/s]
+Test Epoch: [10/10] Loss: 0.5373 ACC@1: 82.63% ACC@5: 98.97%: 100%|██████████| 79/79 [00:10<00:00,  7.61it/s]
+
+Best top-1 accuracy with self-supervised learning:  82.63000000000001
+
+```
+
+
+
+![ass03-simclr-acc](./assets/ass03-simclr-acc.png)
+
+
 
 ## Q3: Denoising Diffusion Probabilistic Models
 
-## Q4: CLIP and Dino
+Image Samples 
+
+![ass03-emoji-dataset](./assets/ass03-emoji-dataset.png)
+
+
+
+Forward Diffusion Pass 
+
+![ass03-ddpm-forward](./assets/ass03-ddpm-forward.png)
+
+
+
+Reverse Pass 
+
+![ass03-ddpm-unet-forward](./assets/ass03-ddpm-unet-forward.png)
+
+
+
+Conditioned DDPM
+
+**![ass03-ddpm-cfg-forward](./assets/ass03-ddpm-cfg-forward.png)**
+
+## Q4: CLIP and DINO
+
+### CLIP 
+
+
+
+Dataset Sample 
+
+![ass03-dino-example-image](./assets/ass03-dino-example-image.png)
+
+
+
+Contrastive Sampels 
+
+![ass03-clip-contrastive](./assets/ass03-clip-contrastive.png)
+
+Zero-Shot Ability of CLIP model
+
+
+
+
+
+![ass03-zero-shot](./assets/ass03-zero-shot.png)
+
+
+
+### DINO 
+
+
+
+DINO Attention Map
+
+![ass03-dino-attention-map](./assets/ass03-dino-attention-map.png)
+
+
+
+Patch Embedding visulization 
+
+![ass03-dino-path-embedding](./assets/ass03-dino-path-embedding.png)
+
+
+
+
+
+From Video  frame 
+
+![ass03-dino-video](./assets/ass03-dino-video.png)
+
+
+
+Video segementation 
+
+<video src="./assets/dino_res.mp4"></video>
+
+
+
+
+

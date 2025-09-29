@@ -1,11 +1,13 @@
+import math
+
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
-import math
 
 """
 This file defines layer types that are commonly used for transformers.
 """
+
 
 class PositionalEncoding(nn.Module):
     """
@@ -13,6 +15,7 @@ class PositionalEncoding(nn.Module):
     this case, the layer has no learnable parameters, since it is a simple
     function of sines and cosines.
     """
+
     def __init__(self, embed_dim, dropout=0.1, max_len=5000):
         """
         Construct the PositionalEncoding layer.
@@ -36,6 +39,12 @@ class PositionalEncoding(nn.Module):
         # this is what the autograder is expecting. For reference, our solution is #
         # less than 5 lines of code.                                               #
         ############################################################################
+        pos_index = torch.arange(0, max_len).unsqueeze(1)  # (max_len, 1)
+        div_term = torch.exp(torch.arange(0, embed_dim, 2) * (-math.log(10000.0) / embed_dim))
+
+        # Compute positional values sin/cos
+        pe[0, :, 0::2] = torch.sin(pos_index * div_term)
+        pe[0, :, 1::2] = torch.cos(pos_index * div_term)
 
         ############################################################################
         #                             END OF YOUR CODE                             #
@@ -43,7 +52,7 @@ class PositionalEncoding(nn.Module):
 
         # Make sure the positional encodings will be saved with the model
         # parameters (mostly for completeness).
-        self.register_buffer('pe', pe)
+        self.register_buffer("pe", pe)
 
     def forward(self, x):
         """
@@ -64,6 +73,9 @@ class PositionalEncoding(nn.Module):
         # appropriate ones to the input sequence. Don't forget to apply dropout    #
         # afterward. This should only take a few lines of code.                    #
         ############################################################################
+
+        output = x + self.pe[:, :S, :]
+        output = self.dropout(output)
 
         ############################################################################
         #                             END OF YOUR CODE                             #
@@ -109,7 +121,7 @@ class MultiHeadAttention(nn.Module):
         self.query = nn.Linear(embed_dim, embed_dim)
         self.value = nn.Linear(embed_dim, embed_dim)
         self.proj = nn.Linear(embed_dim, embed_dim)
-        
+
         self.attn_drop = nn.Dropout(dropout)
 
         self.n_head = num_heads
@@ -138,7 +150,7 @@ class MultiHeadAttention(nn.Module):
           and query.
         """
         N, S, E = query.shape
-        N, T, E = value.shape
+        N, T, D = value.shape
         # Create a placeholder, to be overwritten by your code below.
         output = torch.empty((N, S, E))
         ############################################################################
@@ -155,6 +167,22 @@ class MultiHeadAttention(nn.Module):
         #     prevent a value from influencing output. Specifically, the PyTorch   #
         #     function masked_fill may come in handy.                              #
         ############################################################################
+
+        # Compute key, query and value matrices from sequences
+        K = self.key(key).view(N, T, self.n_head, self.head_dim).transpose(1, 2)
+        Q = self.query(query).view(N, S, self.n_head, self.head_dim).transpose(1, 2)
+        V = self.value(value).view(N, T, self.n_head, self.head_dim).transpose(1, 2)
+
+        # (N,H,S,D/H) @ (N,H,D/H,T) -> (N,H,S,T)
+        scores = Q @ K.transpose(2, 3) / math.sqrt(self.head_dim)
+
+        if attn_mask is not None:
+            scores = scores.masked_fill((attn_mask == 0).unsqueeze(0).unsqueeze(0), float("-inf"))
+
+        # (N,H,S,T) @ (N,H,T,D/H) -> (N,H,S,D/H)
+        scores = self.attn_drop(F.softmax(scores, dim=-1))
+        scores = scores @ V
+        output = self.proj(scores.transpose(1, 2).contiguous().view(N, S, D))
 
         ############################################################################
         #                             END OF YOUR CODE                             #
@@ -202,6 +230,7 @@ class TransformerDecoderLayer(nn.Module):
     """
     A single layer of a Transformer decoder, to be used with TransformerDecoder.
     """
+
     def __init__(self, input_dim, num_heads, dim_feedforward=2048, dropout=0.1):
         """
         Construct a TransformerDecoderLayer instance.
@@ -224,7 +253,6 @@ class TransformerDecoderLayer(nn.Module):
         self.dropout_self = nn.Dropout(dropout)
         self.dropout_cross = nn.Dropout(dropout)
         self.dropout_ffn = nn.Dropout(dropout)
-
 
     def forward(self, tgt, memory, tgt_mask=None):
         """
@@ -252,6 +280,17 @@ class TransformerDecoderLayer(nn.Module):
         # memory, and (2) the feedforward block. Each block should follow the      #
         # same structure as self-attention implemented just above.                 #
         ############################################################################
+        shortcut = tgt
+        tgt = self.cross_attn(query=tgt, key=memory, value=memory, attn_mask=None)
+        tgt = self.dropout_cross(tgt)
+        tgt = tgt + shortcut
+        tgt = self.norm_cross(tgt)
+
+        shortcut = tgt
+        tgt = self.ffn(tgt)
+        tgt = self.dropout_ffn(tgt)
+        tgt = tgt + shortcut
+        tgt = self.norm_ffn(tgt)
 
         ############################################################################
         #                             END OF YOUR CODE                             #
@@ -271,6 +310,7 @@ class PatchEmbedding(nn.Module):
     - in_channels: Number of input image channels (e.g., 3 for RGB).
     - embed_dim: Dimension of the linear embedding space.
     """
+
     def __init__(self, img_size, patch_size, in_channels=3, embed_dim=128):
         super().__init__()
 
@@ -287,7 +327,6 @@ class PatchEmbedding(nn.Module):
         # Linear projection of flattened patches to the embedding dimension
         self.proj = nn.Linear(self.patch_dim, embed_dim)
 
-
     def forward(self, x):
         """
         Forward pass for patch embedding.
@@ -299,8 +338,9 @@ class PatchEmbedding(nn.Module):
         - out: Patch embeddings with shape (N, num_patches, embed_dim)
         """
         N, C, H, W = x.shape
-        assert H == self.img_size and W == self.img_size, \
+        assert H == self.img_size and W == self.img_size, (
             f"Expected image size ({self.img_size}, {self.img_size}), but got ({H}, {W})"
+        )
         out = torch.zeros(N, self.embed_dim)
 
         ############################################################################
@@ -311,6 +351,11 @@ class PatchEmbedding(nn.Module):
         # step. Once the patches are flattened, embed them into latent vectors     #
         # using the projection layer.                                              #
         ############################################################################
+        patches = x.reshape(
+            N, C, H // self.patch_size, self.patch_size, W // self.patch_size, self.patch_size
+        )
+        patches = patches.permute(0, 2, 4, 1, 3, 5).reshape(N, self.num_patches, self.patch_dim)
+        out = self.proj(patches)
 
         ############################################################################
         #                             END OF YOUR CODE                             #
@@ -318,12 +363,11 @@ class PatchEmbedding(nn.Module):
         return out
 
 
-
-
 class TransformerEncoderLayer(nn.Module):
     """
     A single layer of a Transformer encoder, to be used with TransformerEncoder.
     """
+
     def __init__(self, input_dim, num_heads, dim_feedforward=2048, dropout=0.1):
         """
         Construct a TransformerEncoderLayer instance.
@@ -359,6 +403,17 @@ class TransformerEncoderLayer(nn.Module):
         # TODO: Implement the encoder layer by applying self-attention followed    #
         # by a feedforward block. This code will be very similar to decoder layer. #
         ############################################################################
+        shortcut = src
+        src = self.self_attn(query=src, key=src, value=src, attn_mask=src_mask)
+        src = self.dropout_self(src)
+        src = src + shortcut
+        src = self.norm_self(src)
+
+        shortcut = src
+        src = self.ffn(src)
+        src = self.dropout_ffn(src)
+        src = src + shortcut
+        src = self.norm_ffn(src)
 
         ############################################################################
         #                             END OF YOUR CODE                             #
