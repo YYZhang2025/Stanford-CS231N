@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+
 from ..rnn_layers_pytorch import *
 
 
@@ -138,7 +139,23 @@ class CaptioningRNN:
         #                                                                          #
         # You also don't have to implement the backward pass.                      #
         ############################################################################
-        # 
+
+        if self.cell_type == "rnn":
+            # If cell type is regular RNN
+            recurrent_forward = rnn_forward
+        elif self.cell_type == "lstm":
+            # If cell type is long short-term
+            recurrent_forward = lstm_forward
+
+        # Perform forward pass: steps (1) through (4)
+        h0 = affine_forward(features, W_proj, b_proj)
+        x = word_embedding_forward(captions_in, W_embed)
+        h = recurrent_forward(x, h0, Wx, Wh, b)
+        out = temporal_affine_forward(h, W_vocab, b_vocab)
+
+        # Compute loss and its partial derivative: step (5)
+        loss = temporal_softmax_loss(out, captions_out, mask)
+
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -202,7 +219,25 @@ class CaptioningRNN:
         # NOTE: we are still working over minibatches in this function. Also if   #
         # you are using an LSTM, initialize the first cell state to zeros.        #
         ###########################################################################
-        # 
+        h = affine_forward(features, W_proj, b_proj)
+        x = np.repeat(self._start, N)
+        c = np.zeros_like(h)
+
+        for t in range(max_length):
+            # Generate the word embedding of a previous word
+            x = word_embedding_forward(x, W_embed)
+
+            if self.cell_type == "rnn":
+                # If cell type is regular RNN
+                h = rnn_step_forward(x, h, Wx, Wh, b)
+            elif self.cell_type == "lstm":
+                # If cell type is long short-term memory
+                h = lstm_step_forward(x, h, c, Wx, Wh, b)
+
+            # Compute the final forward pass for t to get scores
+            out = affine_forward(h, W_vocab, b_vocab)
+            x = np.argmax(out, axis=1)
+            captions[:, t] = x
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
