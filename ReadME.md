@@ -366,8 +366,8 @@ We also need store the `running_mean` and `running_var` to use the batch normali
 
 $$
 \begin{split}
-\text{running\_mean}  &\leftarrow  (1 - \text{momentum}) \cdot \text{running\_mean}  + \text{momentum} \cdot \mu_B \\
-\text{running\_var}  &\leftarrow  (1 - \text{momentum}) \cdot \text{running\_var} + \text{momentum} \cdot \sigma_B^2
+\text{running-mean}  &\leftarrow  (1 - \text{momentum}) \cdot \text{running-mean}  + \text{momentum} \cdot \mu_B \\
+\text{running-var}  &\leftarrow  (1 - \text{momentum}) \cdot \text{running-var} + \text{momentum} \cdot \sigma_B^2
 \end{split}
 $$
 
@@ -401,11 +401,10 @@ $$
 \begin{split}
 \mathbf{dbeta} &= \sum_{i=1}^{N} \mathbf{dout}_i \\
 \mathbf{dgamma} &= \sum_{i=1}^{N} \big(\mathbf{dout}_i \odot \hat{\mathbf{x}}i\big) \\
-\mathbf{dx} &= \frac{\gamma}{\sqrt{\mathrm{var}+\epsilon}}\Bigg[
-\mathbf{dout}
+\mathbf{dx} &= \frac{\gamma}{\sqrt{\mathrm{var}+\epsilon}}
+\Bigg[\mathbf{dout}
 - \frac{1}{N}\sum{i=1}^{N}\mathbf{dout}_i
-- \hat{\mathbf{x}} \frac{1}{N}\sum{i=1}^{N}\big(\mathbf{dout}_i \odot \hat{\mathbf{x}}_i\big)
-\Bigg]
+- \hat{\mathbf{x}} \frac{1}{N}\sum{i=1}^{N}\big(\mathbf{dout}_i \odot \hat{\mathbf{x}}_i\big)\Bigg]
 \end{split}
 $$
 
