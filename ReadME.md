@@ -399,12 +399,14 @@ The alternative of the backward pass of the batch normalization:
 
 $$
 \begin{split}
+
 \mathbf{dbeta} &= \sum_{i=1}^{N} \mathbf{dout}_i \\
 \mathbf{dgamma} &= \sum_{i=1}^{N} \big(\mathbf{dout}_i \odot \hat{\mathbf{x}}i\big) \\
 \mathbf{dx} &= \frac{\gamma}{\sqrt{\mathrm{var}+\epsilon}}
 \Bigg[\mathbf{dout}
-- \frac{1}{N}\sum{i=1}^{N}\mathbf{dout}_i
-- \hat{\mathbf{x}} \frac{1}{N}\sum{i=1}^{N}\big(\mathbf{dout}_i \odot \hat{\mathbf{x}}_i\big)\Bigg]
+- \frac{1}{N}\sum_{i=1}^{N}\mathbf{dout}_i
+- \hat{\mathbf{x}} \frac{1}{N}\sum_{i=1}^{N}\big(\mathbf{dout}_i \odot \hat{\mathbf{x}}_i\big)\Bigg]
+
 \end{split}
 $$
 
